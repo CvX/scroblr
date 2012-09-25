@@ -1,6 +1,6 @@
 (function ($) {
 
-	var plugin = scroblr.registerHost("jango");
+	var plugin = scroblr.registerPlugin("jango");
 
 	plugin.scrape = function () {
 		return {

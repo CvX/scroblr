@@ -1,6 +1,6 @@
 (function ($) {
 
-	var plugin = scroblr.registerHost("we7");
+	var plugin = scroblr.registerPlugin("we7");
 
 	plugin.init = function () {
 		return this.hostre.test(document.location.hostname) && $('#player-section').length;

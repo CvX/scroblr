@@ -1,6 +1,6 @@
 (function ($) {
 
-	var plugin = scroblr.registerHost("twonky");
+	var plugin = scroblr.registerPlugin("twonky");
 
 	plugin.scrape = function () {
 		if ($(".meta_title").text()) {

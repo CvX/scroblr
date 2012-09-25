@@ -1,6 +1,6 @@
 (function ($) {
 
-	var plugin = scroblr.registerHost("bandcamp");
+	var plugin = scroblr.registerPlugin("bandcamp");
 
 	plugin.init = function () {
 		return this.hostre.test(document.location.hostname) ||

@@ -1,6 +1,6 @@
 (function ($) {
 
-	var plugin = scroblr.registerHost("songza");
+	var plugin = scroblr.registerPlugin("songza");
 
 	plugin.scrape = function () {
 		var info = {

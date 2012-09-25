@@ -1,6 +1,6 @@
 (function ($) {
 
-	var plugin = scroblr.registerHost("google");
+	var plugin = scroblr.registerPlugin("google");
 
 	plugin.scrape = function () {
 		return {

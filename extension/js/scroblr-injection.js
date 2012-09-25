@@ -1,6 +1,6 @@
 var scroblr = (function ($, moment) {
 
-	var currentTrack, host, Plugin, plugins, poller, Track;
+	var currentTrack, activePlugin, Plugin, plugins, poller, Track;
 
 	plugins = {};
 
@@ -26,8 +26,8 @@ var scroblr = (function ($, moment) {
 	Track = function (params) {
 		$.extend(this, params);
 
-		this.host   = host.name;
-		this.hostid = host.id;
+		this.host   = activePlugin.name;
+		this.hostid = activePlugin.id;
 
 		if (this.hasOwnProperty("album")) {
 			this.album = $.trim(this.album);
@@ -95,12 +95,12 @@ var scroblr = (function ($, moment) {
 	 *
 	 * @private
 	 */
-	function init() {
+	function initialize() {
 		for (var key in plugins) {
 			if (plugins.hasOwnProperty(key) && plugins[key].init()) {
-				host    = plugins[key];
-				host.id = host.name.toUpperCase() + moment().valueOf();
-				poller  = window.setInterval(pollTrackInfo, 5000);
+				activePlugin    = plugins[key];
+				activePlugin.id = activePlugin.name.toUpperCase() + moment().valueOf();
+				poller  				= window.setInterval(pollTrackInfo, 5000);
 				break;
 			}
 		}
@@ -112,7 +112,7 @@ var scroblr = (function ($, moment) {
 	function pollTrackInfo() {
 		var newTrack, newTrackStr, prevTrack, prevTrackStr, updateObj;
 
-		newTrack    = new Track(host.scrape());
+		newTrack    = new Track(activePlugin.scrape());
 		newTrackStr = newTrack.toString();
 
 		if (currentTrack) {
@@ -181,11 +181,11 @@ var scroblr = (function ($, moment) {
 	 * Document ready
 	 */
 	$(function () {
-		init();
+		initialize();
 	});
 
 	return {
-		registerHost:    registerPlugin,
+		registerPlugin: registerPlugin,
 		utilities: {
 			calculateDuration: calculateDuration
 		}

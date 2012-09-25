@@ -1,6 +1,6 @@
 (function ($) {
 
-	var plugin = scroblr.registerHost("turntable");
+	var plugin = scroblr.registerPlugin("turntable");
 
 	plugin.scrape = function () {
 		var info = {};

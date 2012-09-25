@@ -1,6 +1,6 @@
 (function ($) {
 
-	var plugin = scroblr.registerHost("playerfm");
+	var plugin = scroblr.registerPlugin("playerfm");
 
 	plugin.scrape = function () {
 		var elapsedString, timeRemainingString;

@@ -1,6 +1,6 @@
 (function ($) {
 
-	var plugin = scroblr.registerHost("soundcloud");
+	var plugin = scroblr.registerPlugin("soundcloud");
 
 	plugin.scrape = function () {
 		var info, player, playing, soundcloudNext;

@@ -1,6 +1,6 @@
 (function ($) {
 
-	var plugin = scroblr.registerHost("accuradio");
+	var plugin = scroblr.registerPlugin("accuradio");
 
 	plugin.scrape = function () {
 		return {

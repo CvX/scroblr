@@ -1,6 +1,6 @@
 (function ($) {
 
-	var plugin = scroblr.registerHost("pandora");
+	var plugin = scroblr.registerPlugin("pandora");
 
 	plugin.scrape = function () {
 		return {
