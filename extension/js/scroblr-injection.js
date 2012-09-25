@@ -104,6 +104,8 @@ var scroblr = (function ($, moment) {
 				break;
 			}
 		}
+
+		plugins = null;
 	}
 
 	/**
