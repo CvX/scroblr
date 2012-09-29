@@ -1,5 +1,5 @@
 var API_KEY, API_SEC, API_URL, LASTFM_AUTH_URL, currentTrack, history,
-	lf_session, lf_sessioncache, lf_auth_waiting, keepalive;
+	lf_session, lf_sessioncache, lf_auth_waiting, keepalive, browser;
 
 API_KEY         = "59c070288bfca89ca9700fde083969bb";
 API_SEC         = "0193a089b025f8cfafcc922e54b93706";
@@ -10,11 +10,12 @@ history         = {};
 keepalive       = null;
 lf_auth_waiting = false;
 lf_session      = JSON.parse(localStorage.lf_session || null);
-lf_sessioncache = JSON.parse(localStorage.lf_sessioncache || null);
+lf_sessioncache = JSON.parse(localStorage.lf_sessioncache || null) || {};
+browser         = {
+	chrome: typeof chrome !== "undefined",
+	safari: typeof safari !== "undefined"
+};
 
-if (!lf_sessioncache) {
-	lf_sessioncache = {};
-}
 
 /**
  * Helper function that takes Last.fm request parameters, appends the api secret
@@ -55,9 +56,9 @@ function getApiSignature(params) {
 function getOptionStatus(option) {
 	var setting;
 
-	if (typeof chrome != "undefined") {
+	if (browser.chrome) {
 		setting = localStorage["enable_" + option];
-	} else if (typeof safari != "undefined") {
+	} else if (browser.safari) {
 		setting = safari.extension.settings["enable_" + option];
 	}
 
@@ -199,9 +200,9 @@ function handleFailure() {
  * window opens for the first time, or when scroblr is enabled.)
  */
 function initialize() {
-	if (typeof chrome != "undefined") {
+	if (browser.chrome) {
 		chrome.extension.onMessage.addListener(messageHandler);
-	} else if (typeof safari != "undefined") {
+	} else if (browser.safari) {
 		safari.application.addEventListener("message", messageHandler, false);
 	}
 }
@@ -318,11 +319,11 @@ function notify(notificationData) {
 function openAuthWindow() {
 	var newTab;
 
-	if (typeof chrome != "undefined") {
+	if (browser.chrome) {
 		chrome.tabs.create({
 			url: LASTFM_AUTH_URL + chrome.extension.getURL("access-granted.html")
 		});
-	} else if (typeof safari != "undefined") {
+	} else if (browser.safari) {
 		newTab = safari.application.activeBrowserWindow.openTab();
 		newTab.url = LASTFM_AUTH_URL + safari.extension.baseURI + "access-granted.html";
 	}
@@ -396,12 +397,12 @@ function scrobbleHistory() {
 function sendMessage(name, message) {
 	var bars, i;
 
-	if (typeof chrome != "undefined") {
+	if (browser.chrome) {
 		chrome.extension.sendMessage({
 			name:    name,
 			message: message
 		});
-	} else if (typeof safari != "undefined") {
+	} else if (browser.safari) {
 		bars = safari.extension.bars;
 		i = bars.length;
 
@@ -480,7 +481,7 @@ function updateCurrentTrack(data) {
 function updateNowPlaying(track) {
 	var params, hostEnabled;
 
-	hostEnabled  = getOptionStatus(track.host);
+	hostEnabled = getOptionStatus(track.host);
 	notify({
 		message: track.artist + " - " + track.title,
 		title:   "Now Playing"
