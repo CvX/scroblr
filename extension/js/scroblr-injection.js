@@ -1,6 +1,6 @@
 var scroblr = (function ($, moment) {
 
-	var currentTrack, activePlugin, Plugin, plugins, poller, Track;
+	var currentTrack, activePlugin, Plugin, plugins, poller, Track, sendMessage;
 
 	plugins = {};
 
@@ -159,15 +159,15 @@ var scroblr = (function ($, moment) {
 	 * @param {object} message
 	 * @private
 	 */
-	function sendMessage(name, message) {
-		if (typeof chrome != "undefined") {
+	if (typeof chrome != "undefined") {
+		sendMessage = function (name, message) {
 			chrome.extension.sendMessage({
 				name: name,
 				message: message
 			});
-		} else if (typeof safari != "undefined") {
-			safari.self.tab.dispatchMessage(name, message);
-		}
+		};
+	} else if (typeof safari != "undefined") {
+		sendMessage = safari.self.tab.dispatchMessage;
 	}
 
 	/**
