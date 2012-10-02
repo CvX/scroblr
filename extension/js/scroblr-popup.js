@@ -1,9 +1,6 @@
 var scroblrBar = (function (model) {
 
-	var currentTrack, keepalive;
-
-	currentTrack = null;
-	keepalive    = null;
+	var currentTrack = null;
 
 	function initialize () {
 		attachBehaviors();
@@ -92,18 +89,10 @@ var scroblrBar = (function (model) {
 		}
 	}
 
-	function keepAlive () {
-		window.clearTimeout(keepalive);
-		keepalive = window.setTimeout(resetBar, 15000);
-	}
-
 	function messageHandler (msg) {
 		switch (msg.name) {
 		case "initUserForm":
 			initializeUserForm(msg.message);
-			break;
-		case "keepAlive":
-			keepAlive();
 			break;
 		case "nowPlaying":
 			updateNowPlaying(msg.message);

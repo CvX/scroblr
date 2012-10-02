@@ -1,5 +1,5 @@
 var API_KEY, API_SEC, API_URL, LASTFM_AUTH_URL, currentTrack, history,
-	lf_session, lf_sessioncache, lf_auth_waiting, keepalive, browser;
+	lf_session, lf_sessioncache, lf_auth_waiting, browser;
 
 API_KEY         = "59c070288bfca89ca9700fde083969bb";
 API_SEC         = "0193a089b025f8cfafcc922e54b93706";
@@ -7,7 +7,6 @@ API_URL         = "http://ws.audioscrobbler.com/2.0/";
 LASTFM_AUTH_URL = "http://www.last.fm/api/auth/?api_key=" + API_KEY + "&cb=";
 currentTrack    = null;
 history         = {};
-keepalive       = null;
 lf_auth_waiting = false;
 lf_session      = JSON.parse(localStorage.lf_session || null);
 lf_sessioncache = JSON.parse(localStorage.lf_sessioncache || null) || {};
@@ -208,18 +207,6 @@ function initialize() {
 }
 
 /**
- * Function that gets run every couple seconds while a song is playing and
- * resets the keepAlive timeout. This is how the extension understands when a
- * scrobbling window gets closed or the song stops playing.
- */
-function keepAlive() {
-	window.clearTimeout(keepalive);
-	keepalive = window.setTimeout(function () {
-		currentTrack = null;
-	}, 15000);
-}
-
-/**
  * Clears the current users session from local memory
  */
 function logoutUser() {
@@ -251,7 +238,7 @@ function loveTrack(love) {
 /**
  * Handles all incoming event messages from other extension resources.
  *
- * @param {object} msg The message contents (ex. {name: "keepAlive",
+ * @param {object} msg The message contents (ex. {name: "loveTrack",
  *                     message: null})
  */
 function messageHandler(msg) {
@@ -261,9 +248,6 @@ function messageHandler(msg) {
 		break;
 	case "cancelAuthLinkClicked":
 		sendMessage("initUserForm", null);
-		break;
-	case "keepAlive":
-		keepAlive();
 		break;
 	case "loginFormSubmitted":
 		getUserSessionFromCache(msg.message);
