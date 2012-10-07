@@ -1,5 +1,5 @@
 var API_KEY, API_SEC, API_URL, LASTFM_AUTH_URL, currentTrack, history,
-	lf_session, lf_sessioncache, lf_auth_waiting, browser;
+	lf_session, lf_sessioncache, lf_auth_waiting, browser, sendMessage;
 
 API_KEY         = "59c070288bfca89ca9700fde083969bb";
 API_SEC         = "0193a089b025f8cfafcc922e54b93706";
@@ -378,15 +378,17 @@ function scrobbleHistory() {
  * @param {string} name The name of the event to trigger
  * @param {?} message Any type of data that should be sent along with the msg
  */
-function sendMessage(name, message) {
-	var bars, i;
-
-	if (browser.chrome) {
+if (browser.chrome) {
+	sendMessage = function(name, message) {
 		chrome.extension.sendMessage({
 			name:    name,
 			message: message
 		});
-	} else if (browser.safari) {
+	};
+} else if (browser.safari) {
+	sendMessage = function(name, message) {
+		var bars, i;
+
 		bars = safari.extension.bars;
 		i = bars.length;
 
@@ -396,7 +398,7 @@ function sendMessage(name, message) {
 				message: message
 			});
 		}
-	}
+	};
 }
 
 /**
