@@ -91,24 +91,6 @@ var scroblr = (function ($, moment) {
 	}
 
 	/**
-	 * Initialization method
-	 *
-	 * @private
-	 */
-	function initialize() {
-		for (var key in plugins) {
-			if (plugins.hasOwnProperty(key) && plugins[key].init()) {
-				activePlugin    = plugins[key];
-				activePlugin.id = activePlugin.name.toUpperCase() + moment().valueOf();
-				poller  				= window.setInterval(pollTrackInfo, 5000);
-				break;
-			}
-		}
-
-		plugins = null;
-	}
-
-	/**
 	 * @private
 	 */
 	function pollTrackInfo() {
@@ -180,10 +162,19 @@ var scroblr = (function ($, moment) {
 	}
 
 	/*
-	 * Document ready
+	 * Initialization on document ready
 	 */
 	$(function () {
-		initialize();
+		for (var key in plugins) {
+			if (plugins.hasOwnProperty(key) && plugins[key].init()) {
+				activePlugin    = plugins[key];
+				activePlugin.id = activePlugin.name.toUpperCase() + moment().valueOf();
+				poller  				= window.setInterval(pollTrackInfo, 5000);
+				break;
+			}
+		}
+
+		plugins = null;
 	});
 
 	return {
