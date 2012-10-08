@@ -1,5 +1,5 @@
-var API_KEY, API_SEC, API_URL, LASTFM_AUTH_URL, currentTrack, history,
-	lf_session, lf_sessioncache, lf_auth_waiting, browser, sendMessage;
+var API_KEY, API_SEC, API_URL, LASTFM_AUTH_URL, currentTrack, lf_session,
+	lf_sessioncache, lf_auth_waiting, browser, sendMessage;
 
 API_KEY         = "59c070288bfca89ca9700fde083969bb";
 API_SEC         = "0193a089b025f8cfafcc922e54b93706";
@@ -258,10 +258,6 @@ function messageHandler(msg) {
 	case "loveTrack":
 		loveTrack(true);
 		break;
-	case "nowPlaying":
-		updateNowPlaying(msg.message);
-		getTrackInfo(msg.message);
-		break;
 	case "unloveTrack":
 		loveTrack(false);
 		break;
@@ -315,16 +311,6 @@ function openAuthWindow() {
 	sendMessage("initUserForm", true);
 }
 
-function pushTrackToHistory(track) {
-	if (track) {
-
-		if (!history.hasOwnProperty(track.hostid)) {
-			history[track.hostid] = [];
-		}
-		history[track.hostid].push(track);
-	}
-}
-
 /**
  * Handles logic for determining if the last played track should be scrobbled
  * and creates the request object.
@@ -336,39 +322,23 @@ function scrobble(track) {
 	var hostEnabled, requestParams;
 
 	hostEnabled = getOptionStatus(track.host);
-	requestParams = {
-		api_key:   API_KEY,
-		artist:    track.artist,
-		sk:        lf_session ? lf_session.key : null,
-		timestamp: Math.round(track.dateTime / 1000),
-		track:     track.title
-	};
-
-	if (track.album) {
-		requestParams.album = track.album;
-	}
 
 	if (lf_session && hostEnabled) {
+		requestParams = {
+			api_key:   API_KEY,
+			artist:    track.artist,
+			sk:        lf_session.key,
+			timestamp: Math.round(track.dateTime / 1000),
+			track:     track.title
+		};
+
+		if (track.album) {
+			requestParams.album = track.album;
+		}
+
 		sendRequest("track.scrobble", requestParams, function () {
 			track.scrobbled = true;
 		});
-	}
-}
-
-function scrobbleHistory() {
-	var i, key, max, track;
-
-	for (key in history) {
-		if (history.hasOwnProperty(key)) {
-
-			for (i = 0, max = history[key].length; i < max; i += 1) {
-				track = history[key][i];
-
-				if (!track.scrobbled && trackShouldBeScrobbled(track)) {
-					scrobble(track);
-				}
-			}
-		}
 	}
 }
 
@@ -438,9 +408,9 @@ function trackShouldBeScrobbled(track) {
 		noDurationWithElapsed;
 
 	greaterThan30s         = (track.duration > 30000);
-	listenedTo4m           = (track.elapsed >= 240000);
-	listenedToMoreThanHalf = (track.elapsed >= track.duration / 2);
-	noDurationWithElapsed  = (track.duration === 0 && track.elapsed > 30000);
+	listenedTo4m           = (track.listeningTime >= 240000);
+	listenedToMoreThanHalf = (track.listeningTime >= track.duration / 2);
+	noDurationWithElapsed  = (track.duration === 0 && track.listeningTime > 30000);
 
 	return (greaterThan30s && (listenedTo4m || listenedToMoreThanHalf)) ||
 				 noDurationWithElapsed;
@@ -451,11 +421,38 @@ function trackShouldBeScrobbled(track) {
  *
  * @param {object} data
  */
-function updateCurrentTrack(data) {
-	for (var key in data) {
-		if (data.hasOwnProperty(key)) {
-			currentTrack[key] = data[key];
+function updateCurrentTrack(track) {
+	var timeDelta, currentTrackStr, prevTrackData, prevTrackStr;
+
+	if (currentTrack) {
+		prevTrackData = currentTrack;
+		prevTrackStr  = currentTrack.artist + " - " + currentTrack.title;
+	}
+
+	currentTrack    = track;
+	currentTrackStr = track.artist + " - " + track.title;
+
+	if (currentTrackStr === prevTrackStr) { // A track continues to play
+		timeDelta = track.stopped ? 2500 : 5000;
+
+		track.listeningTime = prevTrackData.listeningTime + timeDelta;
+		track.scrobbled     = prevTrackData.scrobbled;
+
+		if (!track.scrobbled && trackShouldBeScrobbled(track)) {
+			track.scrobbled = true;
+			scrobble(track);
 		}
+
+		// Reset the counter in case we're playing the track again
+		if (track.listeningTime >= track.duration) {
+			track.listeningTime %= track.duration;
+			track.scrobbled = false;
+		}
+	} else { // New track is playing
+		track.listeningTime = 2500;
+		track.scrobbled     = false;
+
+		updateNowPlaying(track);
 	}
 }
 
@@ -468,10 +465,13 @@ function updateNowPlaying(track) {
 	var params, hostEnabled;
 
 	hostEnabled = getOptionStatus(track.host);
+
 	notify({
 		message: track.artist + " - " + track.title,
 		title:   "Now Playing"
 	});
+
+	getTrackInfo(track);
 
 	if (lf_session && hostEnabled) {
 		params = {
@@ -488,10 +488,6 @@ function updateNowPlaying(track) {
 
 		sendRequest("track.updateNowPlaying", params);
 	}
-
-	pushTrackToHistory(currentTrack);
-	scrobbleHistory();
-	currentTrack = track;
 }
 
 initialize();

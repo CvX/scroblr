@@ -26,8 +26,9 @@ var scroblr = (function ($, moment) {
 	Track = function (params) {
 		$.extend(this, params);
 
-		this.host   = activePlugin.name;
-		this.hostid = activePlugin.id;
+		this.host     = activePlugin.name;
+		this.hostid   = activePlugin.id;
+		this.dateTime = moment().valueOf();
 
 		if (this.hasOwnProperty("album")) {
 			this.album = $.trim(this.album);
@@ -40,15 +41,6 @@ var scroblr = (function ($, moment) {
 		if (this.hasOwnProperty("title")) {
 			this.title = $.trim(this.title);
 		}
-
-		this.dateTime = moment().valueOf();
-		this.toString = function () {
-			if (this.artist && this.title) {
-				return this.artist + " - " + this.title;
-			} else {
-				return "";
-			}
-		};
 	};
 
 	/**
@@ -79,52 +71,13 @@ var scroblr = (function ($, moment) {
 	}
 
 	/**
-	 * Calculates the amount of milliseconds that have passed since the track
-	 * started playing.
-	 *
-	 * @param {object} dateTime A moment object
-	 * @private
-	 */
-	function getElapsedTime(dateTime) {
-		var now = moment().valueOf();
-		return now - dateTime;
-	}
-
-	/**
 	 * @private
 	 */
 	function pollTrackInfo() {
-		var newTrack, newTrackStr, prevTrack, prevTrackStr, updateObj;
+		currentTrack = new Track(activePlugin.scrape());
 
-		newTrack    = new Track(activePlugin.scrape());
-		newTrackStr = newTrack.toString();
-
-		if (currentTrack) {
-			prevTrack    = currentTrack;
-			prevTrackStr = prevTrack.toString();
-		}
-
-		if (newTrackStr) {
-			if (newTrackStr !== prevTrackStr) { // New track is playing
-				updateNowPlaying(newTrack);
-			} else if (!newTrack.stopped === true) { // A track continues to play
-				updateObj = {
-					hostid: newTrack.hostid
-				};
-
-				$.each(["album", "duration", "elapsed", "percent", "score", "stopped"],
-						function (i, val) {
-
-					if (newTrack.hasOwnProperty(val) && newTrack[val] !== prevTrack[val]) {
-						prevTrack[val] = newTrack[val];
-						updateObj[val] = newTrack[val];
-					} else if (val === "elapsed" && !newTrack.hasOwnProperty(val)) {
-						prevTrack[val] = getElapsedTime(prevTrack.dateTime);
-						updateObj[val] = prevTrack[val];
-					}
-				});
-				sendMessage("updateCurrentTrack", updateObj);
-			}
+		if (currentTrack.artist && currentTrack.title) {
+			sendMessage("updateCurrentTrack", currentTrack);
 		}
 	}
 
@@ -150,15 +103,6 @@ var scroblr = (function ($, moment) {
 		};
 	} else if (typeof safari != "undefined") {
 		sendMessage = safari.self.tab.dispatchMessage;
-	}
-
-	/**
-	 * @param {object} track
-	 * @private
-	 */
-	function updateNowPlaying(track) {
-		currentTrack = track;
-		sendMessage("nowPlaying", track);
 	}
 
 	/*
